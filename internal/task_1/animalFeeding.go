@@ -40,7 +40,7 @@ type Dog struct {
 }
 
 func (dog *Dog) Eat(str rune) { // function for Dog's meals
-	if (str >= 'a' && str <= 'z') || (str >= 'A' && str <= 'B') {
+	if (str >= 'a' && str <= 'z') || (str >= 'A' && str <= 'Z') {
 		dog.diary += string(str)
 	}
 }
@@ -50,7 +50,7 @@ type Bird struct {
 }
 
 func (bird *Bird) Eat(str rune) { // function for Bird's meals
-	if !(str >= '0' && str <= '9') && !(str >= 'a' && str <= 'z') && !(str >= 'A' && str <= 'B') {
+	if !(str >= '0' && str <= '9') && !(str >= 'a' && str <= 'z') && !(str >= 'A' && str <= 'Z') {
 		bird.diary += string(str)
 	}
 }
@@ -70,8 +70,11 @@ func CreateAnimals(animalType, animalName string) Animal {
 
 func AnimalFeeding(stream io.Reader) []string {
 	scanner := bufio.NewScanner(stream) // pulling data
+	var food string
 
-	food := []rune(scanner.Text()) // take a feeder with the rune
+	if scanner.Scan() {
+		food = scanner.Text() // take a feeder with the rune
+	}
 
 	ourAnimals := []Animal{} // slice of input animals with their names
 
@@ -82,7 +85,15 @@ func AnimalFeeding(stream io.Reader) []string {
 			break
 		}
 
+		if line == "" { // if line is empty
+			continue
+		}
+		
 		lineParts := strings.Fields(line) // split the line
+
+		if len(lineParts) < 2 {
+			continue
+		}
 
 		animalType := strings.ToLower(lineParts[0]) // unifying the strings for our structure
 		animalName := lineParts[1]
@@ -94,14 +105,18 @@ func AnimalFeeding(stream io.Reader) []string {
 		}
 	}
 
+	foodRunes := []rune(food)
+	animalQueue := make([]Animal, len(ourAnimals)) // slice for animal's stack
+	copy(animalQueue, ourAnimals)
+
 	// feeding alghorithm
 
-	for len(food) > 0 {
-		currentAnimal := ourAnimals[0]                     // take first animal
-		currentSymbol := food[0]                           // take first char
-		currentAnimal.Eat(currentSymbol)                   // eating =)
-		food = food[1:]                                    // deleting currentSymbol
-		ourAnimals = append(ourAnimals[1:], currentAnimal) // add to the end of slice currentAnimal
+	for len(foodRunes) > 0 {
+		currentAnimal := animalQueue[0] // take first animal
+		currentSymbol := foodRunes[0] // take first char		
+		currentAnimal.Eat(currentSymbol) // eating =)
+		foodRunes = foodRunes[1:] // deleting currentSymbol
+		animalQueue = append(animalQueue[1:], currentAnimal) // add to the end of slice currentAnimal
 	}
 
 	results := []string{}
