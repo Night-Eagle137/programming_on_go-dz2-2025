@@ -9,7 +9,7 @@ import (
 type Animal interface { // interface for ours structures
 	GetName() string
 	WhatDidYouEat() string
-	Eat(str rune) bool
+	Eat(str rune)
 }
 
 type BaseAnimal struct { // create a base structure
@@ -29,44 +29,51 @@ type Cat struct {
 	BaseAnimal
 }
 
-func (cat *Cat) Eat(str rune) bool { // function for Cat's meals
+func (cat *Cat) Eat(str rune) { // function for Cat's meals
 	if str >= '0' && str <= '9' {
 		cat.diary += string(str)
-		return true
 	}
-	return false
 }
 
 type Dog struct {
 	BaseAnimal
 }
 
-func (dog *Dog) Eat(str rune) bool { // function for Dog's meals
+func (dog *Dog) Eat(str rune) { // function for Dog's meals
 	if (str >= 'a' && str <= 'z') || (str >= 'A' && str <= 'B') {
 		dog.diary += string(str)
-		return true
 	}
-	return false
 }
 
 type Bird struct {
 	BaseAnimal
 }
 
-func (bird *Bird) Eat(str rune) bool { // function for Bird's meals
+func (bird *Bird) Eat(str rune) { // function for Bird's meals
 	if !(str >= '0' && str <= '9') && !(str >= 'a' && str <= 'z') && !(str >= 'A' && str <= 'B') {
 		bird.diary += string(str)
-		return true
 	}
-	return false
+}
+
+func CreateAnimals(animalType, animalName string) Animal {
+	switch animalType {
+	case "cat":
+		return &Cat{BaseAnimal{name: animalName}}
+	case "dog":
+		return &Dog{BaseAnimal{name: animalName}}
+	case "bird":
+		return &Bird{BaseAnimal{name: animalName}}
+	default:
+		return nil
+	}
 }
 
 func AnimalFeeding(stream io.Reader) []string {
 	scanner := bufio.NewScanner(stream) // pulling data
 
-	food := scanner.Text() // take a feeder
+	food := []rune(scanner.Text()) // take a feeder with the rune
 
-	ourAnimals := make(map[string]string) // map of input animals with their names
+	ourAnimals := []Animal{} // slice of input animals with their names
 
 	for scanner.Scan() {
 		line := scanner.Text() // take new line untill end
@@ -80,7 +87,28 @@ func AnimalFeeding(stream io.Reader) []string {
 		animalType := strings.ToLower(lineParts[0]) // unifying the strings for our structure
 		animalName := lineParts[1]
 
-		ourAnimals[animalType] = animalName // fill the map
+		animal := CreateAnimals(animalType, animalName) // getting adress og animal
+
+		if animal != nil {
+			ourAnimals = append(ourAnimals, animal) // fill the slice with adress
+		}
 	}
 
+	// feeding alghorithm
+
+	for len(food) > 0 {
+		currentAnimal := ourAnimals[0]                     // take first animal
+		currentSymbol := food[0]                           // take first char
+		currentAnimal.Eat(currentSymbol)                   // eating =)
+		food = food[1:]                                    // deleting currentSymbol
+		ourAnimals = append(ourAnimals[1:], currentAnimal) // add to the end of slice currentAnimal
+	}
+
+	results := []string{}
+
+	for _, animal := range ourAnimals {
+		results = append(results, animal.GetName()+" "+animal.WhatDidYouEat())
+	}
+
+	return results
 }
